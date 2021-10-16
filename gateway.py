@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import json
-#import stomp
+import subprocess
 import time
 import random
 import re
@@ -77,14 +77,15 @@ while True:
 		print(mac)
 		#payload_mac = payload_mac.strip('\n')
 		
-		fields["temperature"] 			= int(get_temperature(byte_data))
+		fields["temperature"] 		= int(get_temperature(byte_data))
 		fields["humidity"]              = int(get_humidity(byte_data))
 		fields["pressure"]              = int(get_pressure(byte_data))
-		fields["light"]					= int(get_light(byte_data)/10)
-		fields["Rec1"]					= (get_Rec1adc(byte_data))
-		fields["Rec2"]					= (get_Rec2adc(byte_data))
-		fields["PM"]					= (get_PMadc(byte_data))
+		fields["light"]			= int(get_light(byte_data)/10)
+		fields["Rec1"]			= (get_Rec1adc(byte_data))
+		fields["Rec2"]			= (get_Rec2adc(byte_data))
+		fields["PM"]			= (get_PMadc(byte_data))
 		fields["SuperCap"]              = (get_SuperCap(byte_data))
+		fields["CPU_temp"]		= int(subprocess.getoutput("cat /sys/class/thermal/thermal_zone0/temp"))
 		json_body = [{
 		"measurement": "wb_measurements",
 		"tags": {
