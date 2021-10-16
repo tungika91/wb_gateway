@@ -72,7 +72,8 @@ while True:
 		#print(data[payload_start:(payload_end+payload_start)])
 		payload_mac = data[(payload_start+payload_end+1):]
 		#payload_mac = "00:16:3e:2f:ba:11"
-		mac = payload_mac[0:2]+':'+payload_mac[2:4]+':'+payload_mac[4:6]+':'+payload_mac[6:8]+payload_mac[8:10]+':'+payload_mac[10:12]
+		mac = payload_mac[1:3]+":"+payload_mac[3:5]+":"+payload_mac[5:7]+":"+payload_mac[7:9]+":"+payload_mac[9:11]+":"+payload_mac[11:]
+		mac = mac.strip()
 		print(mac)
 		#payload_mac = payload_mac.strip('\n')
 		
