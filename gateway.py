@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-
+import base64
+import math
 import json
 import subprocess
 import time
@@ -11,7 +12,7 @@ ser = serial.Serial('/dev/ttyACM0', 115200)
 
 payload_mac = "00:16:3e:2f:ba:b7"
 ##############################################################################################################
-client_wb = InfluxDBClient(host="ec2-3-141-152-206.us-east-2.compute.amazonaws.com", port=8086, database="waveboost")
+client_wb = InfluxDBClient(host="ec2-13-212-4-227.ap-southeast-1.compute.amazonaws.com", port=8086, database="Everlink_aliasMac")
 dataFormat = 3#payload["data_format"] if ('data_format' in payload) else None
 fields = {}
 #payload["pressure"] if ('pressure' in payload) else None
@@ -28,6 +29,11 @@ fields["light"]                     = 13#payload["tagID"] if ('tagID' in payload
 fields["rssi"]                      = 14#payload["rssi"] if ('rssi' in payload) else None
 
 ##############################################################################################################	
+def twos_complement(value, bits):
+    if (value & (1 << (bits - 1))) != 0:
+        value = value - (1 << bits)
+    return value
+
 def get_temperature(data):
 	'''Return temperature in celsius'''
 	temp = (data[2] & ~(1 << 7)) + (data[3] / 100)
@@ -47,7 +53,15 @@ def get_pressure(data):
 
 def get_light(data):
 	return (data[12] << 8) + data[13]
-	
+
+def get_acceleration(data):
+    '''Return acceleration mG'''
+    acc_x = twos_complement((data[6] << 8) + data[7], 16)
+    acc_y = twos_complement((data[8] << 8) + data[9], 16)
+    acc_z = twos_complement((data[10] << 8) + data[11], 16)
+    return (acc_x, acc_y, acc_z)
+
+'''	
 def get_Rec1adc(data):
 	return ((data[6] << 8) + data[7])
 	
@@ -59,7 +73,7 @@ def get_PMadc(data):
 	
 def get_SuperCap(data):
 	return ((data[14] << 8) + data[15])	
-	
+'''	
 while True:
 	#data = ser.readline().decode("utf-8")
 	data = ser.readline().decode()
@@ -75,19 +89,22 @@ while True:
 		mac = payload_mac[1:3]+":"+payload_mac[3:5]+":"+payload_mac[5:7]+":"+payload_mac[7:9]+":"+payload_mac[9:11]+":"+payload_mac[11:]
 		mac = mac.strip()
 		print(mac)
+		acc_x, acc_y, acc_z = get_acceleration(byte_data)
 		#payload_mac = payload_mac.strip('\n')
-		
+		fields["accelerationX"]		= acc_x
+		fields["accelerationY"]     = acc_y
+		fields["accelerationZ"]     = acc_z
 		fields["temperature"] 		= int(get_temperature(byte_data))
 		fields["humidity"]              = int(get_humidity(byte_data))
 		fields["pressure"]              = int(get_pressure(byte_data))
 		fields["light"]			= int(get_light(byte_data)/10)
-		fields["Rec1"]			= (get_Rec1adc(byte_data))
-		fields["Rec2"]			= (get_Rec2adc(byte_data))
-		fields["PM"]			= (get_PMadc(byte_data))
-		fields["SuperCap"]              = (get_SuperCap(byte_data))
+		fields["Rec1"]			= 0#(get_Rec1adc(byte_data))
+		fields["Rec2"]			= 0#(get_Rec2adc(byte_data))
+		fields["PM"]			= 0#(get_PMadc(byte_data))
+		fields["SuperCap"]              = 0#(get_SuperCap(byte_data))
 		fields["CPU_temp"]		= int(subprocess.getoutput("cat /sys/class/thermal/thermal_zone0/temp"))
 		json_body = [{
-		"measurement": "wb_measurements",
+		"measurement": "8verlink",
 		"tags": {
         "mac": mac,
         "dataFormat": dataFormat
