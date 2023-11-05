@@ -8,9 +8,9 @@ import random
 import re
 from influxdb import InfluxDBClient
 import serial
-ser = serial.Serial('/dev/ttyACM0', 115200)
+ser = serial.Serial('/dev/ttyACM0', 115200) # UART serial
 
-payload_mac = "00:16:3e:2f:ba:b7"
+payload_mac = "00:16:3e:2f:ba:b7" # initialization - dummy address
 ##############################################################################################################
 client_wb = InfluxDBClient(host="ec2-13-212-4-227.ap-southeast-1.compute.amazonaws.com", port=8086, database="Everlink_aliasMac")
 dataFormat = 3#payload["data_format"] if ('data_format' in payload) else None
@@ -86,6 +86,7 @@ while True:
 		#print(data[payload_start:(payload_end+payload_start)])
 		payload_mac = data[(payload_start+payload_end+1):]
 		#payload_mac = "00:16:3e:2f:ba:11"
+		# Parse mac address from payload (sensors)
 		mac = payload_mac[1:3]+":"+payload_mac[3:5]+":"+payload_mac[5:7]+":"+payload_mac[7:9]+":"+payload_mac[9:11]+":"+payload_mac[11:]
 		mac = mac.strip()
 		print(mac)
